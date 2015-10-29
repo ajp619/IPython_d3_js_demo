@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.dot {
+  stroke: #000;
+}
+
+</style>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<input type="button" onclick="clearInterval(timer)" value="stop">
+<script>
+
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = {{ width }} - margin.left - margin.right,
+    height = {{ height }} - margin.top - margin.bottom;
+
+var x = d3.scale.linear()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var color = d3.scale.category10();
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.csv( {{ fn }}, function(error, data) {
+  if (error) throw error;
+
+  data.forEach(function(d) {
+    d.x = +d.x;
+    d.y = +d.y;
+  });
+
+  x.domain([0, 10]).nice();
+  y.domain([0, 10]).nice();
+
+  svg.selectAll(".dot")
+      .data(data)
+    .enter().append("circle")
+      .attr("class", "dot")
+      .attr("r", 3.5)
+      .attr("cx", function(d) { return x(d.x); })
+      .attr("cy", function(d) { return y(d.y); });
+
+});
+
+
+var timer = setInterval(function() {
+            updateData();
+        }, 5000);
+
+
+function updateData() {
+    d3.csv( {{ fn }}, function(error, data) {
+      if (error) throw error;
+      
+      data.forEach(function(d) {
+        d.x = +d.x;
+        d.y = +d.y;
+      });
+      
+      var circle = svg.selectAll(".dot")
+            .data(data, function(d) { return d.ueid; });
+        
+      circle.transition()
+            .duration(1000)
+            .attr("cx", function(d) { return x(d.x); })
+            .attr("cy", function(d) { return y(d.y); })
+            .attr("r", 3.5)
+            .attr("fill", "black")
+      
+      circle.enter().append("circle")
+            .attr("class", "dot")
+            .attr("r", 3.5)
+            .attr("cx", function(d) { return x(d.x); })
+            .attr("cy", function(d) { return y(d.y); })
+            .attr("fill", "red")
+      
+      circle.exit().remove()
+            
+      });
+}
+
+</script>
